@@ -22,15 +22,17 @@ Rules:
 - NEVER trade markets below 5% or above 95% probability — those are near-expired, not opportunities
 - Look for: clear mispricing, momentum shifts, crowd overreactions in the 10-40% or 60-90% range
 - Be honest about uncertainty — if unsure, set trade to false
+- strategyType must be one of: RISK_OFF, RISK_ON, LONG_ETH, STABLE_YIELD, HEDGE, MOMENTUM, CONTRARIAN
+- strategyDescription: 2-3 sentences explaining the DeFi strategy implication
 
 Respond ONLY with valid JSON, no other text:
-{"trade": true or false, "action": "YES" or "NO", "confidence": 0-100, "reasoning": "one sentence"}`
+{"trade": true or false, "action": "YES" or "NO", "confidence": 0-100, "reasoning": "one sentence", "strategyType": "TYPE", "strategyDescription": "2-3 sentence strategy"}`
 
   try {
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 150,
+      max_tokens: 300,
       temperature: 0.3,
       response_format: { type: 'json_object' }
     })
@@ -42,6 +44,10 @@ Respond ONLY with valid JSON, no other text:
     if (typeof signal.trade !== 'boolean') return null
     if (!['YES', 'NO'].includes(signal.action)) return null
     if (typeof signal.confidence !== 'number') return null
+
+    // Fallback defaults for new fields
+    if (!signal.strategyType) signal.strategyType = 'RISK_OFF'
+    if (!signal.strategyDescription) signal.strategyDescription = signal.reasoning
 
     return { market, signal, prob, volume, liquidity }
   } catch (err) {

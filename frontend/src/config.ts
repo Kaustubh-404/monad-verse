@@ -23,6 +23,8 @@ export const wagmiConfig = getDefaultConfig({
 })
 
 export const VAULT_ADDRESS = '0xb9D42824955b492BE4cBf13988C3d0Ad9985F807' as const
+export const EDGE_TOKEN_ADDRESS = '0x43eb369A0F9c4C8c08716250152Cf16e76a795Ef' as const
+export const STRATEGY_DAO_ADDRESS = '0x750EAe6D52dc0b0420A604C2d734B75d6814f41f' as const
 
 // Full JSON ABI to handle tuple returns properly
 export const VAULT_ABI = [
@@ -100,5 +102,107 @@ export const VAULT_ABI = [
       { name: 'entryProbability', type: 'uint256', indexed: false },
       { name: 'reasoning', type: 'string', indexed: false },
     ],
+  },
+] as const
+
+export const STRATEGY_DAO_ABI = [
+  {
+    name: 'getLatestStrategies',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'n', type: 'uint256' }],
+    outputs: [
+      {
+        name: '',
+        type: 'tuple[]',
+        components: [
+          { name: 'id', type: 'uint256' },
+          { name: 'marketSlug', type: 'string' },
+          { name: 'question', type: 'string' },
+          { name: 'signal', type: 'string' },
+          { name: 'probability', type: 'uint256' },
+          { name: 'confidence', type: 'uint256' },
+          { name: 'strategyType', type: 'string' },
+          { name: 'description', type: 'string' },
+          { name: 'publishedAt', type: 'uint256' },
+          { name: 'active', type: 'bool' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'getStrategyCount',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'getTier',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'user', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'canAccess',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'strategyId', type: 'uint256' },
+      { name: 'user', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  {
+    name: 'unlockTime',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'strategyId', type: 'uint256' },
+      { name: 'user', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'TIER1_THRESHOLD',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'TIER2_THRESHOLD',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'TIER3_THRESHOLD',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+] as const
+
+export const EDGE_ABI = [
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'mint',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [],
   },
 ] as const

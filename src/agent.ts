@@ -1,7 +1,8 @@
 import * as cron from 'node-cron'
 import { fetchMarkets, filterMarkets } from './polymarket'
 import { analyzeMarkets, pickTopSignals } from './llm'
-import { publishPosition, getWalletAddress, getBalance, getOnChainStats } from './monad'
+import { getWalletAddress, getBalance } from './monad'
+import { publishStrategy } from './strategyDao'
 
 async function runCycle() {
   console.log('\n' + '═'.repeat(60))
@@ -34,22 +35,19 @@ async function runCycle() {
       return
     }
 
-    // Step 4: Publish to Monad
-    console.log('\n⛓️  Publishing to Monad testnet...')
+    // Step 4: Publish strategies to StrategyDAO (token-gated access)
+    console.log('\n⛓️  Publishing strategies to Monad testnet...')
     for (const signal of topSignals) {
       const { market, signal: s, prob } = signal
       console.log(`\n   📊 ${market.question.substring(0, 60)}...`)
-      console.log(`      Action: ${s.action} | Confidence: ${s.confidence}% | Prob: ${prob.toFixed(1)}%`)
+      console.log(`      Signal: ${s.action} | Confidence: ${s.confidence}% | Prob: ${prob.toFixed(1)}%`)
+      console.log(`      Strategy: ${s.strategyType}`)
       console.log(`      Reasoning: ${s.reasoning}`)
 
-      const hash = await publishPosition(signal)
-      console.log(`      ✅ TX: ${hash}`)
-      console.log(`         https://testnet.monadexplorer.com/tx/${hash}`)
+      const daoHash = await publishStrategy(signal)
+      console.log(`      ✅ StrategyDAO TX: ${daoHash}`)
+      console.log(`         https://testnet.monadexplorer.com/tx/${daoHash}`)
     }
-
-    // Step 5: Print on-chain stats
-    const stats = await getOnChainStats()
-    console.log(`\n📈 On-chain stats: ${stats.positionCount} positions | Win rate: ${stats.winRate}%`)
 
   } catch (err) {
     console.error('❌ Cycle error:', err)
@@ -70,12 +68,12 @@ async function main() {
     console.warn('⚠️  Low balance! Get testnet MON from https://faucet.monad.xyz')
   }
 
-  if (!process.env.VAULT_CONTRACT) {
-    console.error('❌ VAULT_CONTRACT not set in .env — deploy the contract first!')
+  if (!process.env.STRATEGY_DAO) {
+    console.error('❌ STRATEGY_DAO not set in .env — deploy the contract first!')
     process.exit(1)
   }
 
-  console.log(`📄 Vault: ${process.env.VAULT_CONTRACT}`)
+  console.log(`🏛️  StrategyDAO: ${process.env.STRATEGY_DAO}`)
   console.log('🔗 Network: Monad Testnet')
   console.log('\nStarting first cycle immediately...\n')
 

@@ -17,6 +17,8 @@ export interface LLMSignal {
   action: 'YES' | 'NO'
   confidence: number   // 0-100
   reasoning: string
+  strategyType: string       // e.g. RISK_OFF, LONG_ETH, STABLE_YIELD, HEDGE
+  strategyDescription: string  // 2-3 sentence strategy explanation
 }
 
 export interface Position {

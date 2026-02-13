@@ -1,9 +1,15 @@
+import { useState } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import StatsBar from './components/StatsBar'
 import PositionFeed from './components/PositionFeed'
+import StrategiesPage from './components/StrategiesPage'
 import { VAULT_ADDRESS } from './config'
 
+type Tab = 'dashboard' | 'strategies'
+
 export default function App() {
+  const [tab, setTab] = useState<Tab>('dashboard')
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Header */}
@@ -30,52 +36,85 @@ export default function App() {
             <ConnectButton chainStatus="icon" showBalance={false} />
           </div>
         </div>
+
+        {/* Tabs */}
+        <div className="max-w-4xl mx-auto px-4 flex gap-1 pb-0">
+          <button
+            onClick={() => setTab('dashboard')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              tab === 'dashboard'
+                ? 'border-purple-500 text-white'
+                : 'border-transparent text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => setTab('strategies')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              tab === 'strategies'
+                ? 'border-purple-500 text-white'
+                : 'border-transparent text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            Strategies
+            <span className="ml-1.5 text-xs bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">
+              $EDGE
+            </span>
+          </button>
+        </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Hero */}
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full mb-4">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-            </span>
-            Agent running · Monad Testnet
-          </div>
-          <h2 className="text-3xl font-bold mb-2">
-            AI Agent Trading{' '}
-            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Polymarket
-            </span>
-          </h2>
-          <p className="text-gray-400 text-sm max-w-xl mx-auto">
-            Every trade decision is made by Llama 3.3 70B and published on-chain to Monad.
-            Full transparency. Verifiable track record. No hidden signals.
-          </p>
-        </div>
-
-        {/* Stats */}
-        <StatsBar />
-
-        {/* Feed */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-200">Live Positions</h3>
-            <div className="flex items-center gap-3 text-xs text-gray-500">
-              <a
-                href={`https://testnet.monadexplorer.com/address/${VAULT_ADDRESS}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-gray-300 transition-colors font-mono"
-              >
-                {VAULT_ADDRESS.slice(0, 6)}...{VAULT_ADDRESS.slice(-4)} ↗
-              </a>
-              <span>·</span>
-              <span>auto-refreshes every 30s</span>
+        {tab === 'dashboard' && (
+          <>
+            {/* Hero */}
+            <div className="mb-8 text-center">
+              <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full mb-4">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                Agent running · Monad Testnet
+              </div>
+              <h2 className="text-3xl font-bold mb-2">
+                AI Agent Trading{' '}
+                <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Polymarket
+                </span>
+              </h2>
+              <p className="text-gray-400 text-sm max-w-xl mx-auto">
+                Every trade decision is made by Llama 3.3 70B and published on-chain to Monad.
+                Full transparency. Verifiable track record. No hidden signals.
+              </p>
             </div>
-          </div>
-          <PositionFeed />
-        </div>
+
+            {/* Stats */}
+            <StatsBar />
+
+            {/* Feed */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-200">Live Positions</h3>
+                <div className="flex items-center gap-3 text-xs text-gray-500">
+                  <a
+                    href={`https://testnet.monadexplorer.com/address/${VAULT_ADDRESS}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-gray-300 transition-colors font-mono"
+                  >
+                    {VAULT_ADDRESS.slice(0, 6)}...{VAULT_ADDRESS.slice(-4)} ↗
+                  </a>
+                  <span>·</span>
+                  <span>auto-refreshes every 30s</span>
+                </div>
+              </div>
+              <PositionFeed />
+            </div>
+          </>
+        )}
+
+        {tab === 'strategies' && <StrategiesPage />}
       </main>
 
       {/* Footer */}

@@ -5,9 +5,9 @@
   "main": "dist/agent.js",
   "scripts": {
     "build": "tsc",
-    "agent": "node --env-file=.env dist/agent.js",
-    "dev": "ts-node --env-file=.env src/agent.ts",
-    "derive-address": "node --env-file=.env -e \"const {privateKeyToAccount} = require('viem/accounts'); const a = privateKeyToAccount('0x' + process.env.PRIVATE_KEY); console.log('Wallet:', a.address)\"",
+    "agent": "node -r dotenv/config dist/agent.js",
+    "dev": "ts-node -r dotenv/config src/agent.ts",
+    "derive-address": "node -r dotenv/config -e \"const {privateKeyToAccount} = require('viem/accounts'); const a = privateKeyToAccount('0x' + process.env.PRIVATE_KEY); console.log('Wallet:', a.address)\"",
     "postinstall": "echo 'Dependencies installed via pnpm'"
   },
   "dependencies": {
