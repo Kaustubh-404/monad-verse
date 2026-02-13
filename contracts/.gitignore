@@ -1,0 +1,9 @@
+# Foundry build artifacts
+out/
+cache/
+
+# Deployment broadcast (contains tx data)
+broadcast/
+
+# Foundry lock (auto-generated)
+foundry.lock

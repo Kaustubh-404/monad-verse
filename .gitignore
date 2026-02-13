@@ -10,10 +10,10 @@ node_modules/
 dist/
 out/
 
-# Foundry
+# Foundry (handled by contracts/.gitignore)
 contracts/cache/
 contracts/out/
-contracts/broadcast/*/dry-run/
+contracts/broadcast/
 
 # Frontend build
 frontend/dist/
