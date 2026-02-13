@@ -9,30 +9,36 @@ async function analyzeMarket(market: Market): Promise<AnalyzedMarket | null> {
   const volume = market.volume24hr || 0
   const liquidity = parseFloat(market.liquidity || '0')
 
-  const prompt = `You are an expert prediction market analyst. Analyze this market and decide if there is a strong trading opportunity.
+  const prompt = `You are an expert prediction market analyst giving clear, actionable trade instructions to users.
 
 Market: "${market.question}"
-YES probability: ${prob.toFixed(1)}%
+Current YES probability: ${prob.toFixed(1)}%
 24h Volume: $${volume.toLocaleString()}
 Liquidity: $${liquidity.toLocaleString()}
 
-Rules:
-- Only recommend trading if you are genuinely confident
-- Avoid markets where probability is between 40-60% (too uncertain)
-- NEVER trade markets below 5% or above 95% probability — those are near-expired, not opportunities
-- Look for: clear mispricing, momentum shifts, crowd overreactions in the 10-40% or 60-90% range
-- Be honest about uncertainty — if unsure, set trade to false
+Rules for analysis:
+- Only recommend if you are genuinely confident
+- Avoid markets between 40-60% probability (too uncertain)
+- NEVER recommend markets below 5% or above 95% — near-expired, not opportunities
+- Look for mispricing, momentum shifts, crowd overreactions in the 10-40% or 60-90% range
+- If unsure, set trade to false
 - strategyType must be one of: RISK_OFF, RISK_ON, LONG_ETH, STABLE_YIELD, HEDGE, MOMENTUM, CONTRARIAN
-- strategyDescription: 2-3 sentences explaining the DeFi strategy implication
+
+For strategyDescription, write exactly what the user should DO — be specific and direct:
+- Start with: "Go to Polymarket and bet [YES/NO] on this market."
+- Explain WHY the current crowd probability is wrong or mispriced in plain English
+- State the edge: what makes this a good bet right now
+- End with the DeFi portfolio implication (e.g. "This suggests rotating to risk-off assets / holding more stablecoins / increasing ETH exposure")
+- Keep it 3-4 sentences, no jargon, as if explaining to a smart friend
 
 Respond ONLY with valid JSON, no other text:
-{"trade": true or false, "action": "YES" or "NO", "confidence": 0-100, "reasoning": "one sentence", "strategyType": "TYPE", "strategyDescription": "2-3 sentence strategy"}`
+{"trade": true or false, "action": "YES" or "NO", "confidence": 0-100, "reasoning": "one sentence summary", "strategyType": "TYPE", "strategyDescription": "3-4 sentence actionable instruction"}`
 
   try {
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 300,
+      max_tokens: 400,
       temperature: 0.3,
       response_format: { type: 'json_object' }
     })
