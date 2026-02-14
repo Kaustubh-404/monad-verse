@@ -4,16 +4,16 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/// @title StrategyDAO
-/// @notice Tiered strategy release system.
+/// @title StrategyDAO V2
+/// @notice Enhanced tiered strategy release system with DeFi action support.
 ///         Agent publishes AI-generated DeFi strategies from Polymarket signals.
 ///         Token holders get earlier access based on their $EDGE balance.
+/// @dev This version includes additional fields for macro implications, risk levels, and DeFi actions.
 contract StrategyDAO is Ownable {
-
     // ─── Tier thresholds (18 decimals) ───────────────────────────────────────
     uint256 public constant TIER1_THRESHOLD = 10_000 * 1e18; // Whale
-    uint256 public constant TIER2_THRESHOLD =  1_000 * 1e18; // Dolphin
-    uint256 public constant TIER3_THRESHOLD =    100 * 1e18; // Shrimp
+    uint256 public constant TIER2_THRESHOLD = 1_000 * 1e18; // Dolphin
+    uint256 public constant TIER3_THRESHOLD = 100 * 1e18; // Shrimp
 
     // ─── Tier unlock delays ───────────────────────────────────────────────────
     uint256 public constant TIER1_DELAY = 0;
@@ -26,15 +26,19 @@ contract StrategyDAO is Ownable {
 
     struct Strategy {
         uint256 id;
-        string  marketSlug;         // Polymarket slug → links to market
-        string  question;           // Full question text
-        string  signal;             // "YES" or "NO"
-        uint256 probability;        // Entry probability 0-100
-        uint256 confidence;         // LLM confidence 0-100
-        string  strategyType;       // e.g. RISK_OFF, LONG_ETH, STABLE_YIELD
-        string  description;        // LLM-generated strategy explanation
-        uint256 publishedAt;        // block.timestamp when added
-        bool    active;
+        string marketSlug; // Polymarket slug → links to market
+        string question; // Full question text
+        string signal; // "YES" or "NO"
+        uint256 probability; // Entry probability 0-100
+        uint256 confidence; // LLM confidence 0-100
+        string strategyType; // e.g. RISK_OFF, RATE_CUT_PLAY, ETH_LONG
+        string description; // LLM-generated strategy explanation
+        string macroImplication; // What this prediction means for crypto markets
+        string riskLevel; // low/medium/high
+        string targetReturn; // Expected return (e.g. "5-10% APY", "+20% upside")
+        string defiActions; // JSON-serialized array of DeFi actions
+        uint256 publishedAt; // block.timestamp when added
+        bool active;
     }
 
     Strategy[] public strategies;
@@ -42,8 +46,9 @@ contract StrategyDAO is Ownable {
     // ─── Events ───────────────────────────────────────────────────────────────
     event StrategyAdded(
         uint256 indexed id,
-        string  question,
-        string  strategyType,
+        string question,
+        string strategyType,
+        string riskLevel,
         uint256 confidence,
         uint256 publishedAt
     );
@@ -70,19 +75,26 @@ contract StrategyDAO is Ownable {
     }
 
     /// @notice Returns unix timestamp when strategy unlocks for this user
-    function unlockTime(uint256 strategyId, address user) public view returns (uint256) {
+    function unlockTime(
+        uint256 strategyId,
+        address user
+    ) public view returns (uint256) {
         require(strategyId < strategies.length, "Invalid id");
         uint256 tier = getTier(user);
         return strategies[strategyId].publishedAt + tierDelay(tier);
     }
 
     /// @notice Whether the user can currently see this strategy in full
-    function canAccess(uint256 strategyId, address user) public view returns (bool) {
+    function canAccess(
+        uint256 strategyId,
+        address user
+    ) public view returns (bool) {
         return block.timestamp >= unlockTime(strategyId, user);
     }
 
     // ─── Agent writes ─────────────────────────────────────────────────────────
 
+    /// @notice Add a new strategy (backward compatible with 7 params)
     function addStrategy(
         string memory _marketSlug,
         string memory _question,
@@ -92,22 +104,95 @@ contract StrategyDAO is Ownable {
         string memory _strategyType,
         string memory _description
     ) external onlyOwner returns (uint256) {
+        return
+            _addStrategyInternal(
+                _marketSlug,
+                _question,
+                _signal,
+                _probability,
+                _confidence,
+                _strategyType,
+                _description,
+                "", // macroImplication (empty)
+                "medium", // riskLevel (default)
+                "TBD", // targetReturn (default)
+                "[]" // defiActions (empty array)
+            );
+    }
+
+    /// @notice Add a new strategy with full DeFi fields (11 params)
+    function addStrategyWithDefi(
+        string memory _marketSlug,
+        string memory _question,
+        string memory _signal,
+        uint256 _probability,
+        uint256 _confidence,
+        string memory _strategyType,
+        string memory _description,
+        string memory _macroImplication,
+        string memory _riskLevel,
+        string memory _targetReturn,
+        string memory _defiActions
+    ) external onlyOwner returns (uint256) {
+        return
+            _addStrategyInternal(
+                _marketSlug,
+                _question,
+                _signal,
+                _probability,
+                _confidence,
+                _strategyType,
+                _description,
+                _macroImplication,
+                _riskLevel,
+                _targetReturn,
+                _defiActions
+            );
+    }
+
+    /// @dev Internal function to add strategy
+    function _addStrategyInternal(
+        string memory _marketSlug,
+        string memory _question,
+        string memory _signal,
+        uint256 _probability,
+        uint256 _confidence,
+        string memory _strategyType,
+        string memory _description,
+        string memory _macroImplication,
+        string memory _riskLevel,
+        string memory _targetReturn,
+        string memory _defiActions
+    ) internal returns (uint256) {
         uint256 id = strategies.length;
 
-        strategies.push(Strategy({
-            id:           id,
-            marketSlug:   _marketSlug,
-            question:     _question,
-            signal:       _signal,
-            probability:  _probability,
-            confidence:   _confidence,
-            strategyType: _strategyType,
-            description:  _description,
-            publishedAt:  block.timestamp,
-            active:       true
-        }));
+        strategies.push(
+            Strategy({
+                id: id,
+                marketSlug: _marketSlug,
+                question: _question,
+                signal: _signal,
+                probability: _probability,
+                confidence: _confidence,
+                strategyType: _strategyType,
+                description: _description,
+                macroImplication: _macroImplication,
+                riskLevel: _riskLevel,
+                targetReturn: _targetReturn,
+                defiActions: _defiActions,
+                publishedAt: block.timestamp,
+                active: true
+            })
+        );
 
-        emit StrategyAdded(id, _question, _strategyType, _confidence, block.timestamp);
+        emit StrategyAdded(
+            id,
+            _question,
+            _strategyType,
+            _riskLevel,
+            _confidence,
+            block.timestamp
+        );
         return id;
     }
 
@@ -122,7 +207,9 @@ contract StrategyDAO is Ownable {
         return strategies.length;
     }
 
-    function getLatestStrategies(uint256 n) external view returns (Strategy[] memory) {
+    function getLatestStrategies(
+        uint256 n
+    ) external view returns (Strategy[] memory) {
         uint256 total = strategies.length;
         uint256 count = n > total ? total : n;
         Strategy[] memory result = new Strategy[](count);

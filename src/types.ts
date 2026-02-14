@@ -12,13 +12,28 @@ export interface Market {
   acceptingOrders: boolean
 }
 
+export interface DeFiAction {
+  protocol: string           // e.g. 'uniswap', 'aave', 'lido', 'compound'
+  actionType: 'swap' | 'stake' | 'lend' | 'borrow' | 'farm' | 'withdraw' | 'prepare'
+  fromAsset?: string        // source asset (e.g. 'USDC', 'ETH')
+  toAsset?: string          // target asset (e.g. 'stETH', 'DAI')
+  allocation: string        // percentage or amount (e.g. '50%', '1000 USDC')
+  timing: 'immediate' | 'on-event' | 'gradual' | 'monitor'
+  triggerCondition?: string // e.g. 'rate_cut_confirmed', 'price > $2000'
+  priority: number          // execution order 1-10
+}
+
 export interface LLMSignal {
-  trade: boolean
-  action: 'YES' | 'NO'
-  confidence: number   // 0-100
-  reasoning: string
-  strategyType: string       // e.g. RISK_OFF, LONG_ETH, STABLE_YIELD, HEDGE
-  strategyDescription: string  // 2-3 sentence strategy explanation
+  trade: boolean            // whether to act on this signal
+  action: 'YES' | 'NO'      // legacy: market direction (kept for backward compat)
+  confidence: number        // 0-100
+  reasoning: string         // one sentence summary
+  strategyType: string      // e.g. RISK_OFF, RATE_CUT_PLAY, STABLE_YIELD, LEVERAGE
+  strategyDescription: string  // detailed strategy explanation
+  macroImplication: string  // what this prediction means for crypto markets
+  defiActions: DeFiAction[] // concrete DeFi actions to execute
+  riskLevel: 'low' | 'medium' | 'high'
+  targetReturn: string      // expected return (e.g. '5-10% APY', '+20% upside')
 }
 
 export interface Position {

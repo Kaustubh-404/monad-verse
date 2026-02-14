@@ -23,8 +23,8 @@ export const wagmiConfig = getDefaultConfig({
 })
 
 export const VAULT_ADDRESS = '0xb9D42824955b492BE4cBf13988C3d0Ad9985F807' as const
-export const EDGE_TOKEN_ADDRESS = '0x43eb369A0F9c4C8c08716250152Cf16e76a795Ef' as const
-export const STRATEGY_DAO_ADDRESS = '0x750EAe6D52dc0b0420A604C2d734B75d6814f41f' as const
+export const EDGE_TOKEN_ADDRESS = '0xdc1277C1EE49Fc983C46Ac63A206777C0C551d9E' as const
+export const STRATEGY_DAO_ADDRESS = '0xBce9065498194D86fC119A2C7c856edE35dA388B' as const
 
 // Full JSON ABI to handle tuple returns properly
 export const VAULT_ABI = [
@@ -124,6 +124,10 @@ export const STRATEGY_DAO_ABI = [
           { name: 'confidence', type: 'uint256' },
           { name: 'strategyType', type: 'string' },
           { name: 'description', type: 'string' },
+          { name: 'macroImplication', type: 'string' },
+          { name: 'riskLevel', type: 'string' },
+          { name: 'targetReturn', type: 'string' },
+          { name: 'defiActions', type: 'string' },
           { name: 'publishedAt', type: 'uint256' },
           { name: 'active', type: 'bool' },
         ],
